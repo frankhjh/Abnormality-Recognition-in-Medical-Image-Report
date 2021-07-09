@@ -41,7 +41,7 @@ def train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,
             optimizer.step() 
             total_loss+=loss.item()
 
-        val_loss=evalute(metric2,m,val_dataloader)
+        val_loss=evalute(metric,m,val_dataloader)
         if val_loss<min_loss:
             min_loss=val_loss
             best_epoch=epoch
