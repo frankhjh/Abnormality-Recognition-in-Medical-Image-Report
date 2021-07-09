@@ -89,7 +89,6 @@ if __name__=='__main__':
     val_dataloader=DataLoader(val_data,batch_size=32)
     
     #parameters
-    batch_size=32
     epochs=20
     lr=1e-3
     device=torch.device('cpu')
