@@ -23,11 +23,10 @@ def evalute(metric,model,loader):
     return val_loss
         
         
-def train_predict(model,metric,train_dataloader,val_dataloader,test_data):
+def train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr):
     m=model
     optimizer=optim.Adam(m.parameters(),lr=lr)
-    #metric=nn.MultiLabelSoftMarginLoss()
-    metric2=nn.BCEWithLogitsLoss()
+
     
     min_loss,best_epoch=1000.0,0
     for epoch in range(epochs):
@@ -35,7 +34,7 @@ def train_predict(model,metric,train_dataloader,val_dataloader,test_data):
         for step,(x,y) in enumerate(train_dataloader):
             x,y=x.to(device),y.to(device)
             output=m(x)
-            loss=metric2(output,y)
+            loss=metric(output,y)
             
             optimizer.zero_grad()
             loss.backward() 
@@ -57,8 +56,8 @@ def train_predict(model,metric,train_dataloader,val_dataloader,test_data):
     
     return prediction
 
-def Main(model,metric,train_dataloader,val_dataloader,test_data):
-    pred=train_predict(model,metric,train_dataloader,val_dataloader,test_data)
+def Main(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr):
+    pred=train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr)
     prediction=pred.sigmoid().detach().numpy().tolist()
 
     output_dict={'report_ID':[str(i)+'|' for i in range(pred.shape[0])],
@@ -100,7 +99,7 @@ if __name__=='__main__':
     #take cnn as example
     model=Multi_kernel_cnn()
 
-    Main(model,metric,train_dataloader,val_dataloader,test_data)
+    Main(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr)
     
 
 
