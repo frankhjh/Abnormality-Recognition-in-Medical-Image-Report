@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.functional import dropout
+
 class lstm(nn.Module):
     def __init__(self):
         super(lstm,self).__init__()
@@ -25,7 +26,7 @@ class lstm(nn.Module):
         self.fc=nn.Linear(2*self.hidden_size,self.num_classes)
     
     def forward(self,x):
-        embedded_x=self.embedding_layer(x)#size=[batch_size,text_len,embedd_dim]
+        embedded_x=self.embedding_layer(x) # size=[batch_size,text_len,embedd_dim]
         lstm_output,(hc,_)=self.lstm(embedded_x)
         
         tmp_output=torch.cat([hc[-2,:,:],hc[-1,:,:]],dim=1) 

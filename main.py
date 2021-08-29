@@ -1,3 +1,4 @@
+import pandas as pd
 from utils.dataset import Corpus_Dataset
 from data_prepare import train_text,train_label,test_text
 import torch
@@ -7,26 +8,34 @@ from torch.nn.functional import dropout
 from torch.utils.data import Dataset,DataLoader
 import torch.nn.functional as F
 
-from models.attn_model import Attn_model
+from models.attn_model import TransEncoder
 from models.lstm_model import lstm
 from models.text_cnn_model import Multi_kernel_cnn
+import argparse
+
+parser=argparse.ArgumentParser(description='training parameters')
+parser.add_argument('--model',type=str)
+parser.add_argument('--seed',type=int)
+parser.add_argument('--epochs',type=int)
+parser.add_argument('--device',type=str)
+args=parser.parse_args()
 
 
-def evalute(metric,model,loader):
+def evalute(metric,model,loader,device):
     val_loss=0.0
-    for x,y in loader:
+    for step,(x,y) in enumerate(loader):
         x,y=x.to(device),y.to(device)
         with torch.no_grad():
             output=model(x)
             loss=metric(output,y)
             val_loss+=loss.item()
-    return val_loss
+    return val_loss/(step+1)
         
         
-def train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr):
+def train(model,train_dataloader,val_dataloader,epochs,device,lr=1e-3):
     m=model
     optimizer=optim.Adam(m.parameters(),lr=lr)
-
+    metric=nn.BCEWithLogitsLoss()
     
     min_loss,best_epoch=1000.0,0
     for epoch in range(epochs):
@@ -40,27 +49,26 @@ def train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,
             loss.backward() 
             optimizer.step() 
             total_loss+=loss.item()
-
-        val_loss=evalute(metric,m,val_dataloader)
+        avg_loss=total_loss/(step+1)
+        
+        val_loss=evalute(metric,m,val_dataloader,device)
         if val_loss<min_loss:
             min_loss=val_loss
             best_epoch=epoch
-            torch.save(model.state_dict(),'bm.ckpt')
-        print('epoch {},training loss:{}'.format(epoch,total_loss)+' validation loss:{}'.format(val_loss))
-    print('Training done!\n')
+            torch.save(model.state_dict(),'./train_out/bm.ckpt')
+        print('epoch {},training loss:{}'.format(epoch,avg_loss)+' validation loss:{}'.format(val_loss))
+    print('>>Training done!\n')
 
-    print('Start predicting...')
-    m.load_state_dict(torch.load('bm.ckpt'))
-    prediction=m(test_data)
-    print('All Done!')
-    
+def predict(model,test_data):
+    model.load_state_dict(torch.load('./train_out/bm.ckpt'))
+    prediction=model(test_data)
+    print('>>Predict done!\n')
     return prediction
 
-def Main(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr):
-    pred=train_predict(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr)
-    prediction=pred.sigmoid().detach().numpy().tolist()
+def submit(pred_res):
+    prediction=pred_res.sigmoid().detach().numpy().tolist()
 
-    output_dict={'report_ID':[str(i)+'|' for i in range(pred.shape[0])],
+    output_dict={'report_ID':[str(i)+'|' for i in range(pred_res.shape[0])],
              'Prediction':prediction}
     
     output_df=pd.DataFrame(output_dict)
@@ -68,11 +76,11 @@ def Main(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr):
     apply(lambda x:[str(i) for i in x]).\
     apply(lambda x:'|'+' '.join(x))
 
-    output_df.to_csv('submission.csv',index=False,header=None,sep=',')
+    output_df.to_csv('./pred_out/submission.csv',index=False,header=None,sep=',')
+    print('>>Submitted!')
 
-
-if __name__=='__main__':
-    #data
+def Main(model,seed,epochs,device):
+    
     #split data into train/validation set
     train_text_tensor=torch.LongTensor(train_text[:9000])
     validation_text_tensor=torch.LongTensor(train_text[9000:])
@@ -84,21 +92,33 @@ if __name__=='__main__':
     #data loader
     train_data=Corpus_Dataset(train_text_tensor,train_label_tensor)
     train_dataloader=DataLoader(train_data,batch_size=32,shuffle=True)
-
     val_data=Corpus_Dataset(validation_text_tensor,validation_label_tensor)
     val_dataloader=DataLoader(val_data,batch_size=32)
-    
-    #parameters
-    epochs=20
-    lr=1e-3
-    device=torch.device('cpu')
-    torch.manual_seed(5)
-    metric=nn.BCEWithLogitsLoss()
 
-    #take cnn as example
-    model=Multi_kernel_cnn()
-
-    Main(model,metric,train_dataloader,val_dataloader,test_data,epochs,lr)
+    if model=='cnn':
+        model=Multi_kernel_cnn()
+    if model=='rnn':
+        model=lstm()
+    if model=='attn':
+        model=TransEncoder()
     
+    torch.manual_seed(seed)
+    # train
+    train(model,train_dataloader,val_dataloader,epochs,device)
+    # predict
+    pred=predict(model,test_data)
+    # submit
+    submit(pred)
+        
+
+if __name__=='__main__':
+    # parameters
+    model=args.model
+    seed=args.seed
+    epochs=args.epochs
+    device=args.device
+    
+    # run 
+    Main(model,seed,epochs,device)
 
 
