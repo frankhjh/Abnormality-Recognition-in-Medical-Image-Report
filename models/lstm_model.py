@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import torch
 import torch.nn as nn
 from torch.nn.functional import dropout
@@ -23,6 +24,8 @@ class lstm(nn.Module):
                           bidirectional=True,
                           dropout=0.2,
                           batch_first=True)
+        
+
         self.fc=nn.Linear(2*self.hidden_size,self.num_classes)
     
     def forward(self,x):

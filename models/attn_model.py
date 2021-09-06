@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from models.transformer.transformer_encoder import Encoder
 import torch
 import torch.nn as nn

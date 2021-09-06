@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import torch
 import torch.nn as nn
 from torch.nn.functional import dropout
+
 class Multi_kernel_cnn(nn.Module):
     def __init__(self):
         super(Multi_kernel_cnn,self).__init__()
