@@ -21,7 +21,7 @@ class TransEncoder(nn.Module):
         self.n_class=17
         self.fc1=nn.Linear(self.len_,1)
         self.fc2=nn.Linear(self.dim_model,self.n_class)
-        self.dropout=nn.Dropout(0.3)
+        self.dropout=nn.Dropout(0.2)
         self.encoder=Encoder(vocab_size=self.vocab_size,
                              dim_word_vec=self.dim_word_vec,
                              n_layers=self.n_layers,
@@ -39,7 +39,7 @@ class TransEncoder(nn.Module):
         x=self.dropout(x)
         x=self.fc1(x).squeeze(-1)
         x=F.relu(x)
-        x=self.dropout(x)
+        #x=self.dropout(x)
         output=self.fc2(x)
         
         return output

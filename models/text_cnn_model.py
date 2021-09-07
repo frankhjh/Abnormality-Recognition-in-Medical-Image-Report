@@ -14,7 +14,7 @@ class Multi_kernel_cnn(nn.Module):
         self.text_len=104 
         self.dropout_rate=0.5
         self.feature_size=128 
-        self.window_sizes=[2,3,4,5,6]
+        self.window_sizes=[2,4,6,8,10]
         
         self.embedding_layer=nn.Embedding(num_embeddings=self.vocab_size,
                                           embedding_dim=self.embedd_dim,
