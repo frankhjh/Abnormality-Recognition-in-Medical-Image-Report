@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import pandas as pd
 import json
 from collections import defaultdict
