@@ -8,6 +8,7 @@ For the reason of privacy protection, the text description has already replaced 
 
 ## Modeling
 For this task, I tried following classical deep learning models and the combination of them.
+
 1.**Text-CNN**
 
 2.**Bi-LSTM**
